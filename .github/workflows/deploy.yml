@@ -112,11 +112,11 @@ jobs:
             --set serviceAccount.create=false \
             --set serviceAccount.name=aws-load-balancer-controller
 
-          # Install EBS CSI Driver
+          # Install EBS CSI Driver (fixed for latest chart)
           helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
             --namespace kube-system \
             --set controller.serviceAccount.create=false \
-            --set serviceAccount.name=ebs-csi-controller-sa
+            --set controller.serviceAccount.name=ebs-csi-controller-sa
 
       - name: Deploy Backend
         run: |
