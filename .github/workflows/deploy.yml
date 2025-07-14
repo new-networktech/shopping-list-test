@@ -2,9 +2,9 @@ name: Build and Deploy to EKS
 
 on:
   push:
-    branches: [main]
+    branches: [compose]
   pull_request:
-    branches: [main]
+    branches: [compose]
 
 env:
   AWS_REGION: eu-west-1
@@ -54,7 +54,7 @@ jobs:
   deploy-to-eks:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/compose'
 
     steps:
       - name: Checkout code
