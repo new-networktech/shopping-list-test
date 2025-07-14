@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: nntwork/shopping-list-test
+  repository: "${DOCKER_HUB_USERNAME}/shopping-list-frontend"
   tag: "latest"
   pullPolicy: Always
 
