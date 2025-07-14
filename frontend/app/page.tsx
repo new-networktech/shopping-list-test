@@ -43,7 +43,7 @@ export default function Home() {
   const loadShoppingList = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_BASE_URL}/api/list`)
+      const response = await axios.get(`/api/list`)
       setItems(response.data)
     } catch (err) {
       setError('Failed to load shopping list')
@@ -58,7 +58,7 @@ export default function Home() {
 
     try {
       setLoading(true)
-      const response = await axios.post(`${API_BASE_URL}/api/add`, newItem)
+      const response = await axios.post(`/api/add`, newItem)
       setItems([...items, response.data])
       setNewItem({ name: '', quantity: 1, category: 'general', emoji: '🛒' })
       setError('')
@@ -73,7 +73,7 @@ export default function Home() {
   const removeItem = async (id: number) => {
     try {
       setLoading(true)
-      await axios.delete(`${API_BASE_URL}/api/remove/${id}`)
+      await axios.delete(`/api/remove/${id}`)
       setItems(items.filter(item => item.id !== id))
       setError('')
     } catch (err) {
@@ -87,7 +87,7 @@ export default function Home() {
   const toggleItem = async (id: number) => {
     try {
       setLoading(true)
-      await axios.put(`${API_BASE_URL}/api/toggle/${id}`)
+      await axios.put(`/api/toggle/${id}`)
       setItems(items.map(item => 
         item.id === id ? { ...item, completed: !item.completed } : item
       ))
@@ -103,12 +103,12 @@ export default function Home() {
   const loadDefaults = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_BASE_URL}/api/defaults`)
+      const response = await axios.get(`/api/defaults`)
       const defaultItems = response.data
       
       // Add each default item
       for (const item of defaultItems) {
-        await axios.post(`${API_BASE_URL}/api/add`, item)
+        await axios.post(`/api/add`, item)
       }
       
       // Reload the list
