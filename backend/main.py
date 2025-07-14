@@ -5,8 +5,6 @@ from typing import List, Optional
 import json
 import os
 from datetime import datetime
-import boto3
-from botocore.exceptions import ClientError
 
 app = FastAPI(
     title="Shopping List API",
@@ -18,7 +16,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://k8s-default-shopping-88aebfc02b-269189989.eu-west-1.elb.amazonaws.com"
+        "http://localhost:3000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -43,7 +41,6 @@ class AddItemRequest(BaseModel):
 
 # Storage file path
 STORAGE_FILE = "/app/data/shopping_list.json"
-S3_BUCKET = os.getenv("S3_BUCKET", "shopping-list-backup")
 
 # Ensure data directory exists
 os.makedirs(os.path.dirname(STORAGE_FILE), exist_ok=True)
@@ -67,21 +64,6 @@ def save_shopping_list(items: List[dict]):
     except Exception as e:
         print(f"Error saving shopping list: {e}")
 
-def backup_to_s3():
-    """Backup shopping list to S3"""
-    try:
-        if os.path.exists(STORAGE_FILE):
-            s3_client = boto3.client('s3')
-            s3_client.upload_file(
-                STORAGE_FILE, 
-                S3_BUCKET, 
-                f"backup/shopping_list_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            )
-            return True
-    except ClientError as e:
-        print(f"Error backing up to S3: {e}")
-        return False
-
 @app.get("/")
 async def root():
     """Root endpoint"""
@@ -94,7 +76,6 @@ async def root():
             "add_item": "/api/add",
             "remove_item": "/api/remove/{item_id}",
             "defaults": "/api/defaults",
-            "backup": "/api/backup"
         }
     }
 
@@ -166,15 +147,6 @@ async def get_default_items():
         {"name": "Cheese", "quantity": 1, "category": "dairy", "emoji": "🧀"},
     ]
     return default_items
-
-@app.post("/api/backup")
-async def backup_list():
-    """Backup shopping list to S3"""
-    success = backup_to_s3()
-    if success:
-        return {"message": "Backup completed successfully"}
-    else:
-        raise HTTPException(status_code=500, detail="Backup failed")
 
 @app.get("/health")
 async def health_check():

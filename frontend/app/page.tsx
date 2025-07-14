@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Plus, Trash2, Check, ShoppingCart, Download } from 'lucide-react'
+import { Plus, Trash2, Check, ShoppingCart } from 'lucide-react'
 
 interface ShoppingItem {
   id: number
@@ -121,20 +121,6 @@ export default function Home() {
     }
   }
 
-  const backupList = async () => {
-    try {
-      setLoading(true)
-      await axios.post(`${API_BASE_URL}/api/backup`)
-      alert('Backup completed successfully!')
-      setError('')
-    } catch (err) {
-      setError('Failed to backup list')
-      console.error('Error backing up:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const emojiOptions = [
     '🛒', '🥛', '🍞', '🥚', '🍌', '🍗', '🍚', '🍅', '🧀', '🥕', '🥩', '🐟', '🍎', '🍊', '🥬', '🧂', '🫖', '☕'
   ]
@@ -237,14 +223,6 @@ export default function Home() {
           >
             <ShoppingCart size={20} />
             Load Defaults
-          </button>
-          <button
-            onClick={backupList}
-            disabled={loading}
-            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <Download size={20} />
-            Backup to S3
           </button>
         </div>
 

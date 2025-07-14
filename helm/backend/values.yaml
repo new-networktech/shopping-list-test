@@ -1,5 +1,5 @@
 # Default values for shopping-list-backend
-replicaCount: 2
+replicaCount: 1
 
 image:
   repository: nntwork/shopping-list-test
@@ -34,8 +34,8 @@ resources:
     memory: 256Mi
 
 autoscaling:
-  enabled: true
-  minReplicas: 2
+  enabled: false
+  minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
