@@ -3,8 +3,8 @@ replicaCount: 1
 
 image:
   repository: nntwork/shopping-list-test
-  tag: "frontend-20240607-public3"
-  pullPolicy: IfNotPresent
+  tag: "latest"
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""

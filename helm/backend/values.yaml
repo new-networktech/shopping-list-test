@@ -3,8 +3,8 @@ replicaCount: 1
 
 image:
   repository: nntwork/shopping-list-test
-  tag: "backend-20240714-cors-fix"
-  pullPolicy: IfNotPresent
+  tag: "latest"
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""
@@ -70,7 +70,7 @@ readinessProbe:
   periodSeconds: 5
 
 ingress:
-  enabled: true
+  enabled: false
   className: "alb"
   annotations:
     kubernetes.io/ingress.class: alb

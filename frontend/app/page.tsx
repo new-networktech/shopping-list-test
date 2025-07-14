@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react';
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Plus, Trash2, Check, ShoppingCart } from 'lucide-react'
@@ -21,7 +22,7 @@ interface AddItemRequest {
   emoji: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 export default function Home() {
   const [items, setItems] = useState<ShoppingItem[]>([])
