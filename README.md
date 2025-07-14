@@ -1,246 +1,173 @@
-# Shopping List App - DevOps Test Task
+# 🛒 Shopping List App – DevOps Testaufgabe
 
-A complete DevOps solution featuring a FastAPI backend and Next.js frontend deployed on AWS EKS with Terraform, Helm, and automated CI/CD.
+Eine vollständige CI/CD-Pipeline und Infrastruktur auf AWS für einen professionell entwickelten Webservice: eine "Shopping List App" mit FastAPI-Backend und Next.js-Frontend.
 
-## 🏗️ Architecture
+## 🎯 Projektübersicht
 
-- **Infrastructure**: AWS EKS cluster provisioned with Terraform
-- **Backend**: FastAPI application with S3 data persistence
-- **Frontend**: Next.js application with modern UI
-- **Load Balancing**: AWS Application Load Balancer (ALB) with ingress controller
-- **Storage**: EBS volumes for persistent data + S3 backup
-- **Monitoring**: Health checks and auto-scaling
+Diese Anwendung demonstriert:
 
-## 🚀 Quick Start
+- **DevOps Skills**: Terraform, Kubernetes, CI/CD
+- **Full-Stack Development**: FastAPI + Next.js
+- **Cloud Infrastructure**: AWS EKS, EBS, S3, ALB
+- **Containerization**: Docker + Helm
+- **Best Practices**: Infrastructure as Code, GitOps
+
+## 🏗️ Architektur
+
+```
+                User
+                 ↓
+           AWS ALB (Ingress)
+                 ↓
+         NGINX Ingress Controller
+             ↙           ↘
+        FastAPI         Next.js
+         (API)         (Frontend)
+             ↘           ↙
+            PVC (EBS) / S3 Backup
+```
+
+## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
 
-- AWS CLI configured with appropriate permissions
-- Terraform installed
-- kubectl installed
-- Helm installed
-- Docker installed
+- Docker Desktop
+- Node.js 18+
+- Python 3.9+
+- Git
 
-### 1. Clone and Setup
+### Local Setup
 
 ```bash
-git clone <your-repo-url>
-cd shopping-list-test
+# 1. Start local development
+docker-compose up -d
+
+# 2. Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
 ```
 
-### 2. Deploy Infrastructure
+## 📁 Projektstruktur
+
+```
+.
+├── backend/               # FastAPI App
+├── frontend/              # Next.js App
+├── helm/                  # Kubernetes Helm Charts
+│   ├── backend/
+│   └── frontend/
+├── terraform/             # AWS Infrastructure
+├── docker-compose.yml     # Local development
+├── .gitlab-ci.yml         # CI/CD Pipeline
+└── README.md
+```
+
+## 🛠️ Technologie-Stack
+
+- **Backend**: FastAPI (Python)
+- **Frontend**: Next.js (React)
+- **Infrastructure**: Terraform + AWS EKS
+- **Containerization**: Docker + Helm
+- **CI/CD**: GitLab CI
+- **Storage**: EBS + S3
+- **Load Balancing**: AWS ALB + Nginx Ingress
+
+## 🌐 Deployment
+
+### Local Development
 
 ```bash
-cd terraform
+docker-compose up -d
+```
+
+### Production (AWS EKS)
+
+```bash
+# 1. Deploy infrastructure
+cd terraform/
 terraform init
-terraform apply -auto-approve
+terraform apply
+
+# 2. Deploy application
+helm upgrade --install shopping-list ./helm/
 ```
 
-### 3. Update Kubeconfig
+## 📚 API Endpoints
 
-```bash
-aws eks update-kubeconfig --region eu-west-1 --name shopping-list-test-cluster
-```
-
-### 4. Automated Application Deployment
-
-**For Linux/Mac:**
-
-```bash
-chmod +x deploy.sh
-./deploy.sh
-```
-
-**For Windows:**
-
-```powershell
-.\deploy.ps1
-```
-
-### 5. Access Your Application
-
-The deployment script will output the URLs for your frontend and backend applications.
-
-## 🔄 CI/CD Pipeline (Optional)
-
-For automated deployments, set up the GitHub Actions CI/CD pipeline:
-
-1. **Set up GitHub secrets** (see `CI-CD-SETUP.md` for details):
-
-   - `AWS_ACCESS_KEY_ID`
-   - `AWS_SECRET_ACCESS_KEY`
-   - `DOCKER_HUB_USERNAME`
-   - `DOCKER_HUB_PASSWORD`
-
-2. **Push to main branch** - the pipeline will automatically:
-   - Build and push Docker images to Docker Hub
-   - Deploy to EKS cluster
-   - Test the deployment
-   - Provide ALB URLs in the pipeline output
-
-See `CI-CD-SETUP.md` for detailed setup instructions.
-
-## 🔧 Manual Deployment (if needed)
-
-If you prefer to deploy manually or troubleshoot:
-
-### 1. Install Controllers
-
-```bash
-# Add Helm repositories
-helm repo add eks https://aws.github.io/eks-charts
-helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
-helm repo update
-
-# Get IAM role ARNs from Terraform
-cd terraform
-LOAD_BALANCER_CONTROLLER_ROLE_ARN=$(terraform output -raw aws_load_balancer_controller_role_arn)
-EBS_CSI_CONTROLLER_ROLE_ARN=$(terraform output -raw ebs_csi_controller_role_arn)
-cd ..
-
-# Create service accounts with IAM role annotations
-kubectl create serviceaccount aws-load-balancer-controller -n kube-system
-kubectl annotate serviceaccount aws-load-balancer-controller -n kube-system eks.amazonaws.com/role-arn="$LOAD_BALANCER_CONTROLLER_ROLE_ARN"
-
-kubectl create serviceaccount ebs-csi-controller-sa -n kube-system
-kubectl annotate serviceaccount ebs-csi-controller-sa -n kube-system eks.amazonaws.com/role-arn="$EBS_CSI_CONTROLLER_ROLE_ARN"
-
-# Install AWS Load Balancer Controller
-helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-    --namespace kube-system \
-    --set clusterName=shopping-list-test-cluster \
-    --set serviceAccount.create=false \
-    --set serviceAccount.name=aws-load-balancer-controller
-
-# Install EBS CSI Driver
-helm install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
-    --namespace kube-system \
-    --set controller.serviceAccount.create=false \
-    --set serviceAccount.name=ebs-csi-controller-sa
-```
-
-### 2. Deploy Applications
-
-```bash
-# Deploy backend
-helm install shopping-list-backend ./helm/backend --namespace default
-
-# Deploy frontend
-helm install shopping-list-frontend ./helm/frontend --namespace default
-```
-
-## 📁 Project Structure
-
-```
-shopping-list-test/
-├── terraform/                 # Infrastructure as Code
-│   ├── main.tf               # EKS cluster, VPC, IAM roles
-│   ├── variables.tf          # Terraform variables
-│   └── terraform.tfvars      # Variable values
-├── backend/                  # FastAPI application
-│   ├── main.py              # API endpoints
-│   ├── requirements.txt     # Python dependencies
-│   └── Dockerfile          # Container image
-├── frontend/                # Next.js application
-│   ├── package.json        # Node.js dependencies
-│   ├── pages/              # React components
-│   └── Dockerfile          # Container image
-├── helm/                    # Helm charts
-│   ├── backend/            # Backend deployment chart
-│   └── frontend/           # Frontend deployment chart
-├── deploy.sh               # Linux/Mac deployment script
-├── deploy.ps1              # Windows deployment script
-└── README.md               # This file
-```
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-1. **Service Selector Mismatch**: If you see 503 errors, check that service selectors match pod labels
-2. **IAM Permission Errors**: Ensure AWS Load Balancer Controller has proper IAM permissions
-3. **CORS Errors**: Backend CORS settings are configured for the frontend ALB DNS
-
-### Useful Commands
-
-```bash
-# Check cluster status
-kubectl get nodes
-kubectl get pods --all-namespaces
-
-# Check ingress status
-kubectl get ingress
-kubectl describe ingress shopping-list-frontend
-
-# View logs
-kubectl logs -l app.kubernetes.io/name=shopping-list-backend
-kubectl logs -l app.kubernetes.io/name=shopping-list-frontend
-
-# Check service endpoints
-kubectl get endpoints shopping-list-backend
-kubectl get endpoints shopping-list-frontend
-```
+- `GET /api/list` - Get shopping list
+- `POST /api/add` - Add item to list
+- `DELETE /api/remove/{item_id}` - Remove item
+- `GET /api/defaults` - Get default items
 
 ## 🧹 Cleanup
 
-To destroy all resources safely:
-
-### **Option 1: Automated Cleanup (Recommended)**
-
-**For Linux/Mac:**
+### Local Development
 
 ```bash
-cd terraform
-chmod +x destroy.sh
-./destroy.sh
+# Stop and remove containers
+docker-compose down
+
+# Remove volumes (optional - will delete all data)
+docker-compose down -v
+
+# Remove images (optional)
+docker rmi shopping-list-test-backend shopping-list-test-frontend
 ```
 
-**For Windows:**
+### Production Infrastructure (AWS)
 
-```powershell
-cd terraform
+#### Option 1: Safe Destroy Script (Recommended)
+
+```bash
+# Linux/Mac
+cd terraform/
+chmod +x destroy.sh
+./destroy.sh
+
+# Windows PowerShell
+cd terraform/
 .\destroy.ps1
 ```
 
-The automated scripts will:
-
-- Clean up Kubernetes resources (Helm releases, services, etc.)
-- Delete AWS Load Balancers and target groups
-- Clean S3 bucket contents
-- Run `terraform destroy` with proper dependency handling
-
-### **Option 2: Manual Cleanup**
+#### Option 2: Manual Terraform Destroy
 
 ```bash
-# Delete Helm releases
-helm uninstall shopping-list-frontend
-helm uninstall shopping-list-backend
-helm uninstall aws-ebs-csi-driver
-helm uninstall aws-load-balancer-controller
+cd terraform/
+terraform destroy
+```
 
-# Destroy Terraform infrastructure
-cd terraform
+#### Option 3: Force Destroy (if resources are stuck)
+
+```bash
+cd terraform/
 terraform destroy -auto-approve
 ```
 
-**Note**: The automated scripts handle dependency issues that can cause manual `terraform destroy` to fail.
+### What Gets Destroyed
 
-## 🎯 Features
+- ✅ EKS Cluster and all worker nodes
+- ✅ VPC, subnets, and networking components
+- ✅ S3 bucket with all backup data
+- ✅ IAM roles and policies
+- ✅ Load balancers and security groups
+- ✅ All associated AWS resources
 
-- ✅ **Infrastructure as Code**: Complete Terraform setup
-- ✅ **Container Orchestration**: Kubernetes with EKS
-- ✅ **Load Balancing**: AWS ALB with ingress controller
-- ✅ **Persistent Storage**: EBS volumes + S3 backup
-- ✅ **Auto-scaling**: Horizontal Pod Autoscaler
-- ✅ **Health Monitoring**: Liveness and readiness probes
-- ✅ **Automated Deployment**: One-command deployment scripts
-- ✅ **CI/CD Pipeline**: GitHub Actions with automatic build and deploy
-- ✅ **Modern UI**: Responsive Next.js frontend
-- ✅ **RESTful API**: FastAPI backend with OpenAPI docs
+### Manual Cleanup (if needed)
 
-## 📝 Notes
+1. **Check AWS Console** for any remaining resources
+2. **Delete S3 bucket contents** manually if bucket deletion fails
+3. **Remove IAM roles** manually if they have dependencies
+4. **Clean up local files**:
+   ```bash
+   rm -rf terraform/.terraform
+   rm terraform/terraform.tfstate*
+   ```
 
-- The deployment scripts automatically handle all post-Terraform setup
-- IAM roles and service accounts are created with proper annotations
-- CORS is configured to allow frontend-backend communication
-- All Helm templates use consistent labeling for proper service discovery
+### Cost Savings
+
+Destroying the infrastructure will save approximately **$183/month** in AWS costs.
+
+## 📝 License
+
+MIT License

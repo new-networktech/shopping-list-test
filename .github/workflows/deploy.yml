@@ -86,20 +86,15 @@ jobs:
           helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
           helm repo update
 
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.5
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Get Terraform outputs
         run: |
-          cd terraform
-          terraform init
-          LOAD_BALANCER_CONTROLLER_ROLE_ARN=$(terraform output -raw aws_load_balancer_controller_role_arn)
-          EBS_CSI_CONTROLLER_ROLE_ARN=$(terraform output -raw ebs_csi_controller_role_arn)
+          export LOAD_BALANCER_CONTROLLER_ROLE_ARN=$(jq -r .aws_load_balancer_controller_role_arn.value terraform/tf-outputs.json)
+          export EBS_CSI_CONTROLLER_ROLE_ARN=$(jq -r .ebs_csi_controller_role_arn.value terraform/tf-outputs.json)
           echo "LOAD_BALANCER_CONTROLLER_ROLE_ARN=$LOAD_BALANCER_CONTROLLER_ROLE_ARN" >> $GITHUB_ENV
           echo "EBS_CSI_CONTROLLER_ROLE_ARN=$EBS_CSI_CONTROLLER_ROLE_ARN" >> $GITHUB_ENV
-          cd ..
 
       - name: Setup service accounts and controllers
         run: |
@@ -168,6 +163,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
