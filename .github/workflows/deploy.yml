@@ -147,13 +147,8 @@ jobs:
           sleep 60
 
           FRONTEND_ALB=$(kubectl get ingress shopping-list-frontend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-          BACKEND_ALB=$(kubectl get ingress shopping-list-backend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-
           echo "Frontend URL: http://$FRONTEND_ALB" >> $GITHUB_STEP_SUMMARY
-          echo "Backend API: http://$BACKEND_ALB" >> $GITHUB_STEP_SUMMARY
-
           echo "FRONTEND_URL=http://$FRONTEND_ALB" >> $GITHUB_ENV
-          echo "BACKEND_URL=http://$BACKEND_ALB" >> $GITHUB_ENV
 
       - name: Test deployment
         run: |
