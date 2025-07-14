@@ -1,0 +1,80 @@
+{
+  "aws_load_balancer_controller_role_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:iam::885378802219:role/shopping-list-test-aws-load-balancer-controller"
+  },
+  "cluster_certificate_authority_data": {
+    "sensitive": false,
+    "type": "string",
+    "value": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJYTc0cFlOaXIwcDB3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TlRBM01UUXhNakkzTkRaYUZ3MHpOVEEzTVRJeE1qTXlORFphTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURoK25YU05IYktuRlJROTRHcng0eFNReGpBckREUnk0NXFPTWxNWjZxMUpnMUZYa0VSVzdTc0U0YVMKSE8rQUcyNTU1cUIvdDNkckRsM1oxOTZlcU9ZRlQ4RDhOL0xXR2VTcFF1dGpkK3lCWEI2QWVkWHVQUy9wcWNWbApVTGZ0bk1tTThZYmJWTHpVUHEvUFcwSmFtSFN3VW90WEVSVzd3ZGwyT1Yvb3JtREpjTVA3cllHc01ZNS9leGFZCnd2RFArWkNxTW56ei85dGYyNTV3VmRUUkx6L1FYREZQQXA5ZEw3MWxYMjcrUGM2ZFpBckFZRHNFOEtoTEplTEEKY0pJMHNWQ21ETFBJU2V6ZWJPU3dsdG9ldWd3N3M5Vk1NMWF1L1RGd1pHTk1pTmFXZUZtTjdTTHZWeDM5clNtUAprVHZRVUlPN29XYmlIOHhMSnpxeGQ1QUVFUmJIQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJReFVuREFrRlFGOWhmdTNBYS9ubDVhYzhLb3JUQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQlNnWEpCbVp4cgo3OEhRZHZWM1FPM2xuTUg3SVRHbWw4UGZ5bUdROG5Wb2k4cUwxN0J0T2pJMHNLcGJJVDUwQTg1RXMwNUhyeHE4CjhVUHdRYldnTGxTeDNBVGJka3kwRndxWFUxNGZINDJOUVpDRlhFZUtmOGpZS1FNUlJGVktqSzhxN24xRzRpN2EKaFJta00zajdvVzllTSsxMTJHdUlMQW1Id1ZCdWpYNGVPZzRRQXN4MFR5TGp4anBGdnVqWjNMY3FnVWl1K2RiWgpld2UvOTVwUEdUK3BvdU1MMG1ZdmlBWU5xNzN1RmhkK0NsemFyVlBvU1kwV0xIQU5yR2gwY000Y2FVUEZEeUpECmRSU0xpenphM24wQ2VScm1wZXN5U1c2SXV6Y3Z2bWkxbW9PMTRUMmh3dVR1WHNFeWNMb2VLTEF0UkxZbmp2aWoKTVlvU1VISmt0NVlFCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+  },
+  "cluster_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://902F5ADA3410A9B4D9C4D5F4E63F947F.gr7.eu-west-1.eks.amazonaws.com"
+  },
+  "cluster_iam_role_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "shopping-list-test-cluster-cluster-20250714122756313300000002"
+  },
+  "cluster_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "shopping-list-test-cluster"
+  },
+  "cluster_security_group_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "sg-00950825d77759232"
+  },
+  "ebs_csi_controller_role_arn": {
+    "sensitive": false,
+    "type": "string",
+    "value": "arn:aws:iam::885378802219:role/shopping-list-test-ebs-csi-controller"
+  },
+  "private_subnets": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-05aee648bd13e10ca",
+      "subnet-0ef087249941f63c7"
+    ]
+  },
+  "public_subnets": {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        "string",
+        "string"
+      ]
+    ],
+    "value": [
+      "subnet-05fde8c908e9f1f16",
+      "subnet-0e022caf94b1d9088"
+    ]
+  },
+  "region": {
+    "sensitive": false,
+    "type": "string",
+    "value": "eu-west-1"
+  },
+  "s3_bucket_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "shopping-list-test-backup-3lxdca0m"
+  },
+  "vpc_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "vpc-0cceaa21c72bd401a"
+  }
+}
