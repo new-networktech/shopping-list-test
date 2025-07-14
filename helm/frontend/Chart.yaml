@@ -1,0 +1,16 @@
+apiVersion: v2
+name: shopping-list-frontend
+description: A Helm chart for Shopping List Frontend (Next.js)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - nextjs
+  - react
+  - shopping-list
+home: https://github.com/new-networktech/shopping-list-test
+sources:
+  - https://github.com/new-networktech/shopping-list-test
+maintainers:
+  - name: DevOps Test
+    email: devops@example.com
