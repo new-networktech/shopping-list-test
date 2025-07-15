@@ -46,7 +46,7 @@ export default function Home() {
       const response = await axios.get(`/api/list`)
       setItems(response.data)
     } catch (err) {
-      setError('Failed to load shopping list')
+      setError('Fehler beim Laden der Einkaufsliste')
       console.error('Error loading shopping list:', err)
     } finally {
       setLoading(false)
@@ -63,7 +63,7 @@ export default function Home() {
       setNewItem({ name: '', quantity: 1, category: 'general', emoji: '🛒' })
       setError('')
     } catch (err) {
-      setError('Failed to add item')
+      setError('Fehler beim Hinzufügen des Artikels')
       console.error('Error adding item:', err)
     } finally {
       setLoading(false)
@@ -77,7 +77,7 @@ export default function Home() {
       setItems(items.filter(item => item.id !== id))
       setError('')
     } catch (err) {
-      setError('Failed to remove item')
+      setError('Fehler beim Entfernen des Artikels')
       console.error('Error removing item:', err)
     } finally {
       setLoading(false)
@@ -93,7 +93,7 @@ export default function Home() {
       ))
       setError('')
     } catch (err) {
-      setError('Failed to toggle item')
+      setError('Fehler beim Umschalten des Artikels')
       console.error('Error toggling item:', err)
     } finally {
       setLoading(false)
@@ -115,7 +115,7 @@ export default function Home() {
       await loadShoppingList()
       setError('')
     } catch (err) {
-      setError('Failed to load default items')
+      setError('Fehler beim Laden der Standardartikel')
       console.error('Error loading defaults:', err)
     } finally {
       setLoading(false)
@@ -129,12 +129,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-4xl mx-auto">
+        <div className="flex justify-end mb-6">
+          <a href="/readme" className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded shadow hover:from-blue-600 hover:to-indigo-700 transition font-semibold">
+            📖 Projekt Readme
+          </a>
+        </div>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            🛒 Shopping List App
+            🛒 Einkaufslisten-App
           </h1>
-          <p className="text-gray-600">DevOps Test Task - FastAPI + Next.js</p>
+          <p className="text-gray-600">DevOps Testaufgabe - FastAPI + Next.js</p>
         </div>
 
         {/* Error Message */}
@@ -146,23 +151,23 @@ export default function Home() {
 
         {/* Add Item Form */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Add New Item</h2>
+          <h2 className="text-xl font-semibold mb-4">Neuen Artikel hinzufügen</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Item Name
+                Artikelname
               </label>
               <input
                 type="text"
                 value={newItem.name}
                 onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter item name"
+                placeholder="Artikelname eingeben"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity
+                Menge
               </label>
               <input
                 type="number"
@@ -174,20 +179,20 @@ export default function Home() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
+                Kategorie
               </label>
               <select
                 value={newItem.category}
                 onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="general">General</option>
-                <option value="dairy">Dairy</option>
-                <option value="bakery">Bakery</option>
-                <option value="fruits">Fruits</option>
-                <option value="vegetables">Vegetables</option>
-                <option value="meat">Meat</option>
-                <option value="grains">Grains</option>
+                <option value="general">Allgemein</option>
+                <option value="dairy">Milchprodukte</option>
+                <option value="bakery">Backwaren</option>
+                <option value="fruits">Obst</option>
+                <option value="vegetables">Gemüse</option>
+                <option value="meat">Fleisch</option>
+                <option value="grains">Getreide</option>
               </select>
             </div>
             <div>
@@ -211,7 +216,7 @@ export default function Home() {
             className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Plus size={20} />
-            Add Item
+            Artikel hinzufügen
           </button>
         </div>
 
@@ -223,13 +228,13 @@ export default function Home() {
             className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <ShoppingCart size={20} />
-            Load Defaults
+            Standard laden
           </button>
         </div>
 
         {/* Shopping List */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Shopping List</h2>
+          <h2 className="text-xl font-semibold mb-4">Einkaufsliste</h2>
           {loading && (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -238,7 +243,7 @@ export default function Home() {
           {!loading && items.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <ShoppingCart size={48} className="mx-auto mb-4 opacity-50" />
-              <p>Your shopping list is empty. Add some items to get started!</p>
+              <p>Ihre Einkaufsliste ist leer. Fügen Sie einige Artikel hinzu, um zu beginnen!</p>
             </div>
           )}
           {!loading && items.length > 0 && (
@@ -267,7 +272,7 @@ export default function Home() {
                         {item.name}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Qty: {item.quantity} • {item.category}
+                        Menge: {item.quantity} • {item.category}
                       </p>
                     </div>
                   </div>
@@ -285,7 +290,7 @@ export default function Home() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-gray-500 text-sm">
-          <p>DevOps Test Task - Shopping List App</p>
+          <p>DevOps Testaufgabe - Einkaufslisten-App</p>
           <p>FastAPI Backend + Next.js Frontend</p>
         </div>
       </div>
