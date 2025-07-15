@@ -164,9 +164,6 @@ terraform destroy -auto-approve
    rm terraform/terraform.tfstate*
    ```
 
-### Cost Savings
-
-Destroying the infrastructure will save approximately **$183/month** in AWS costs.
 
 ## 📝 License
 
