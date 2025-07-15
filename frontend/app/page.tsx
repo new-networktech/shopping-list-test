@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react';
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import axios from 'axios'
 import { Plus, Trash2, Check, ShoppingCart } from 'lucide-react'
 
@@ -34,6 +33,15 @@ export default function Home() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const lastActionRef = useRef<HTMLDivElement | null>(null);
+  const [scrollToRef, setScrollToRef] = useState<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (scrollToRef) {
+      scrollToRef.scrollIntoView({ behavior: 'auto', block: 'center' });
+      setScrollToRef(null);
+    }
+  }, [items]);
 
   // Load shopping list on component mount
   useEffect(() => {
@@ -71,6 +79,8 @@ export default function Home() {
   }
 
   const removeItem = async (id: number) => {
+    const el = document.getElementById(`item-${id}`);
+    if (el) lastActionRef.current = el as HTMLDivElement;
     try {
       setLoading(true)
       await axios.delete(`/api/remove/${id}`)
@@ -81,10 +91,13 @@ export default function Home() {
       console.error('Error removing item:', err)
     } finally {
       setLoading(false)
+      if (lastActionRef.current) setScrollToRef(lastActionRef.current);
     }
   }
 
   const toggleItem = async (id: number) => {
+    const el = document.getElementById(`item-${id}`);
+    if (el) lastActionRef.current = el as HTMLDivElement;
     try {
       setLoading(true)
       await axios.put(`/api/toggle/${id}`)
@@ -97,6 +110,7 @@ export default function Home() {
       console.error('Error toggling item:', err)
     } finally {
       setLoading(false)
+      if (lastActionRef.current) setScrollToRef(lastActionRef.current);
     }
   }
 
@@ -150,7 +164,7 @@ export default function Home() {
         )}
 
         {/* Add Item Form */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <form onSubmit={e => e.preventDefault()} className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Neuen Artikel hinzufügen</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -211,6 +225,7 @@ export default function Home() {
             </div>
           </div>
           <button
+            type="button"
             onClick={addItem}
             disabled={loading || !newItem.name.trim()}
             className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -218,7 +233,7 @@ export default function Home() {
             <Plus size={20} />
             Artikel hinzufügen
           </button>
-        </div>
+        </form>
 
         {/* Action Buttons */}
         <div className="flex gap-4 mb-6">
@@ -251,12 +266,14 @@ export default function Home() {
               {items.map((item) => (
                 <div
                   key={item.id}
+                  id={`item-${item.id}`}
                   className={`flex items-center justify-between p-4 border rounded-lg ${
                     item.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <button
+                      type="button"
                       onClick={() => toggleItem(item.id)}
                       className={`p-2 rounded-full ${
                         item.completed
@@ -277,6 +294,7 @@ export default function Home() {
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => removeItem(item.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-full"
                   >
