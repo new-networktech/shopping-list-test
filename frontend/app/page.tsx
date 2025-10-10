@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Plus, Trash2, Check, ShoppingCart } from 'lucide-react'
+import { Plus, Check, ShoppingCart, Trash2, LogOut, UserCircle } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import { getAuthHeaders } from '../lib/auth'
 
 interface ShoppingItem {
   id: number
@@ -21,10 +24,11 @@ interface AddItemRequest {
   emoji: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-
 export default function Home() {
+  const { user, logout, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [items, setItems] = useState<ShoppingItem[]>([])
+  const [currentListId] = useState<string>('default')
   const [newItem, setNewItem] = useState<AddItemRequest>({
     name: '',
     quantity: 1,
@@ -33,15 +37,13 @@ export default function Home() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const lastActionRef = useRef<HTMLDivElement | null>(null);
-  const [scrollToRef, setScrollToRef] = useState<HTMLDivElement | null>(null);
 
-  useLayoutEffect(() => {
-    if (scrollToRef) {
-      scrollToRef.scrollIntoView({ behavior: 'auto', block: 'center' });
-      setScrollToRef(null);
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login')
     }
-  }, [items]);
+  }, [user, authLoading, router])
 
   // Load shopping list on component mount
   useEffect(() => {
@@ -51,11 +53,17 @@ export default function Home() {
   const loadShoppingList = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`/api/list`)
+      const response = await axios.get(`/api/list?list_id=${currentListId}`, {
+        headers: getAuthHeaders()
+      })
       setItems(response.data)
-    } catch (err) {
-      setError('Fehler beim Laden der Einkaufsliste')
-      console.error('Error loading shopping list:', err)
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        logout()
+      } else {
+        setError('Fehler beim Laden der Einkaufsliste')
+        console.error('Error loading shopping list:', err)
+      }
     } finally {
       setLoading(false)
     }
@@ -66,7 +74,9 @@ export default function Home() {
 
     try {
       setLoading(true)
-      const response = await axios.post(`/api/add`, newItem)
+      const response = await axios.post(`/api/add?list_id=${currentListId}`, newItem, {
+        headers: getAuthHeaders()
+      })
       setItems([...items, response.data])
       setNewItem({ name: '', quantity: 1, category: 'general', emoji: '🛒' })
       setError('')
@@ -78,29 +88,12 @@ export default function Home() {
     }
   }
 
-  const removeItem = async (id: number) => {
-    const el = document.getElementById(`item-${id}`);
-    if (el) lastActionRef.current = el as HTMLDivElement;
-    try {
-      setLoading(true)
-      await axios.delete(`/api/remove/${id}`)
-      setItems(items.filter(item => item.id !== id))
-      setError('')
-    } catch (err) {
-      setError('Fehler beim Entfernen des Artikels')
-      console.error('Error removing item:', err)
-    } finally {
-      setLoading(false)
-      if (lastActionRef.current) setScrollToRef(lastActionRef.current);
-    }
-  }
-
   const toggleItem = async (id: number) => {
-    const el = document.getElementById(`item-${id}`);
-    if (el) lastActionRef.current = el as HTMLDivElement;
     try {
       setLoading(true)
-      await axios.put(`/api/toggle/${id}`)
+      await axios.put(`/api/toggle/${id}?list_id=${currentListId}`, {}, {
+        headers: getAuthHeaders()
+      })
       setItems(items.map(item => 
         item.id === id ? { ...item, completed: !item.completed } : item
       ))
@@ -110,19 +103,56 @@ export default function Home() {
       console.error('Error toggling item:', err)
     } finally {
       setLoading(false)
-      if (lastActionRef.current) setScrollToRef(lastActionRef.current);
+    }
+  }
+
+  const removeItem = async (id: number) => {
+    try {
+      setLoading(true)
+      await axios.delete(`/api/remove/${id}?list_id=${currentListId}`, {
+        headers: getAuthHeaders()
+      })
+      setItems(items.filter(item => item.id !== id))
+      setError('')
+    } catch (err) {
+      setError('Fehler beim Entfernen des Artikels')
+      console.error('Error removing item:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const clearAllItems = async () => {
+    try {
+      setLoading(true)
+      for (const item of items) {
+        await axios.delete(`/api/remove/${item.id}?list_id=${currentListId}`, {
+        headers: getAuthHeaders()
+      })
+      }
+      setItems([])
+      setError('')
+    } catch (err) {
+      setError('Fehler beim Löschen aller Artikel')
+      console.error('Error clearing all items:', err)
+    } finally {
+      setLoading(false)
     }
   }
 
   const loadDefaults = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`/api/defaults`)
+      const response = await axios.get(`/api/defaults`, {
+        headers: getAuthHeaders()
+      })
       const defaultItems = response.data
       
       // Add each default item
       for (const item of defaultItems) {
-        await axios.post(`/api/add`, item)
+        await axios.post(`/api/add?list_id=${currentListId}`, item, {
+          headers: getAuthHeaders()
+        })
       }
       
       // Reload the list
@@ -140,176 +170,246 @@ export default function Home() {
     '🛒', '🥛', '🍞', '🥚', '🍌', '🍗', '🍚', '🍅', '🧀', '🥕', '🥩', '🐟', '🍎', '🍊', '🥬', '🧂', '🫖', '☕'
   ]
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-6">
-          <a href="/readme" className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded shadow hover:from-blue-600 hover:to-indigo-700 transition font-semibold">
-            📖 Projekt Readme
-          </a>
+  // Helper functions to separate items
+  const openItems = items.filter(item => !item.completed)
+  const purchasedItems = items.filter(item => item.completed)
+
+  // Show loading while checking auth
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="text-lg font-semibold text-slate-700">Loading...</div>
         </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-3 sm:p-4 lg:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* User Header */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <UserCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">Eingeloggt als</p>
+                <p className="font-bold text-slate-800 text-sm sm:text-base">{user.username}</p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {user.is_admin && (
+                <button
+                  onClick={() => router.push('/admin')}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+                >
+                  <span className="text-lg">👑</span>
+                  <span className="hidden sm:inline">Admin Dashboard</span>
+                  <span className="sm:hidden">Admin</span>
+                </button>
+              )}
+              <button
+                onClick={logout}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            🛒 Einkaufslisten-App
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl shadow-lg mb-4">
+            <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3">
+            Einkaufslisten-App
           </h1>
-          <p className="text-gray-600">DevOps Testaufgabe - FastAPI + Next.js</p>
+          <p className="text-slate-600 text-sm sm:text-base font-medium">DevOps Testaufgabe - FastAPI + Next.js</p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+          <div className="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-xl mb-6 shadow-sm">
+            <div className="flex items-center">
+              <div className="w-5 h-5 bg-red-500 rounded-full mr-3 flex-shrink-0"></div>
+              <p className="font-medium">{error}</p>
+            </div>
           </div>
         )}
 
-        {/* Add Item Form */}
-        <form onSubmit={e => e.preventDefault()} className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Neuen Artikel hinzufügen</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Artikelname
-              </label>
-              <input
-                type="text"
-                value={newItem.name}
-                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Artikelname eingeben"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Menge
-              </label>
-              <input
-                type="number"
-                value={newItem.quantity}
-                onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                min="1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kategorie
-              </label>
-              <select
-                value={newItem.category}
-                onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="general">Allgemein</option>
-                <option value="dairy">Milchprodukte</option>
-                <option value="bakery">Backwaren</option>
-                <option value="fruits">Obst</option>
-                <option value="vegetables">Gemüse</option>
-                <option value="meat">Fleisch</option>
-                <option value="grains">Getreide</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Emoji
-              </label>
-              <select
-                value={newItem.emoji}
-                onChange={(e) => setNewItem({ ...newItem, emoji: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {emojiOptions.map(emoji => (
-                  <option key={emoji} value={emoji}>{emoji}</option>
-                ))}
-              </select>
+
+        {/* Excel-like Shopping List Table */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+              {/* Offene Einkäufe */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-gradient-to-r from-green-400 to-green-500 rounded-full shadow-sm"></div>
+                  <h3 className="text-lg sm:text-xl font-bold text-green-700">
+                    Offene Einkäufe
+                    <span className="ml-2 bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">
+                      {openItems.length}
+                    </span>
+                  </h3>
+                </div>
+                
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-gradient-to-br from-green-50/30 to-white">
+                  {/* Table Header */}
+                  <div className="bg-gradient-to-r from-green-50 to-slate-50 border-b border-slate-200 px-3 sm:px-4 py-3 text-sm font-bold text-slate-700 grid grid-cols-12 gap-2">
+                    <div className="col-span-1 text-center">#</div>
+                    <div className="col-span-7">Artikel</div>
+                    <div className="col-span-2 text-center">Menge</div>
+                    <div className="col-span-2 text-center">Aktion</div>
+                  </div>
+                  
+                  {/* Table Body */}
+                  <div className="divide-y divide-slate-100">
+                    {/* Add new item row */}
+                    <div className="px-3 sm:px-4 py-3 hover:bg-green-50/50 transition-colors duration-200 grid grid-cols-12 gap-2 items-center bg-gradient-to-r from-green-50/30 to-transparent">
+                      <div className="col-span-1 text-green-500 text-sm font-bold flex items-center justify-center">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                      <div className="col-span-7">
+                        <input
+                          type="text"
+                          value={newItem.name}
+                          onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                          onKeyPress={(e) => e.key === 'Enter' && addItem()}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          placeholder="Artikel eingeben..."
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          value={newItem.quantity}
+                          onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                          onKeyPress={(e) => e.key === 'Enter' && addItem()}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                          min="1"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <button
+                          onClick={addItem}
+                          disabled={loading || !newItem.name.trim()}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-2 rounded-xl text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        >
+                          <Plus className="w-4 h-4 mx-auto" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Existing items */}
+                    {loading && (
+                      <div className="px-3 sm:px-4 py-6 text-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500 mx-auto"></div>
+                      </div>
+                    )}
+
+                    {!loading && openItems.map((item, index) => (
+                      <div key={item.id} className="px-3 sm:px-4 py-3 hover:bg-green-50/50 transition-all duration-200 grid grid-cols-12 gap-2 items-center group">
+                        <div className="col-span-1 text-slate-500 text-sm font-medium text-center">{index + 1}</div>
+                        <div className="col-span-7 font-semibold text-slate-800 group-hover:text-green-700 transition-colors duration-200">{item.name}</div>
+                        <div className="col-span-2 text-slate-600 text-sm text-center font-medium">{item.quantity}x</div>
+                        <div className="col-span-2 flex gap-1 justify-center">
+                          <button
+                            onClick={() => toggleItem(item.id)}
+                            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-1.5 rounded-lg text-xs transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Als gekauft markieren"
+                          >
+                            <Check size={12} />
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-1.5 rounded-lg text-xs transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Artikel entfernen"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Gekauft */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 bg-gradient-to-r from-red-400 to-red-500 rounded-full shadow-sm"></div>
+                  <h3 className="text-lg sm:text-xl font-bold text-red-700">
+                    Gekauft
+                    <span className="ml-2 bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded-full">
+                      {purchasedItems.length}
+                    </span>
+                  </h3>
+                </div>
+                
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-gradient-to-br from-red-50/30 to-white">
+                  {/* Table Header */}
+                  <div className="bg-gradient-to-r from-red-50 to-slate-50 border-b border-slate-200 px-3 sm:px-4 py-3 text-sm font-bold text-slate-700 grid grid-cols-12 gap-2">
+                    <div className="col-span-1 text-center">#</div>
+                    <div className="col-span-7">Artikel</div>
+                    <div className="col-span-2 text-center">Menge</div>
+                    <div className="col-span-2 text-center">Aktion</div>
+                  </div>
+                  
+                  {/* Table Body */}
+                  <div className="divide-y divide-slate-100">
+                    {purchasedItems.length === 0 && (
+                      <div className="px-3 sm:px-4 py-12 text-center">
+                        <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <ShoppingCart className="w-6 h-6 text-red-400" />
+                        </div>
+                        <p className="text-slate-400 text-sm font-medium">Noch nichts gekauft</p>
+                      </div>
+                    )}
+
+                    {purchasedItems.map((item, index) => (
+                      <div key={item.id} className="px-3 sm:px-4 py-3 hover:bg-red-50/50 transition-all duration-200 grid grid-cols-12 gap-2 items-center group">
+                        <div className="col-span-1 text-slate-500 text-sm font-medium text-center">{index + 1}</div>
+                        <div className="col-span-7 font-semibold text-slate-600 line-through group-hover:text-red-700 transition-colors duration-200">{item.name}</div>
+                        <div className="col-span-2 text-slate-400 text-sm text-center font-medium">{item.quantity}x</div>
+                        <div className="col-span-2 flex gap-1 justify-center">
+                          <button
+                            onClick={() => toggleItem(item.id)}
+                            className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white p-1.5 rounded-lg text-xs transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Als nicht gekauft markieren"
+                          >
+                            <Check size={12} />
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-1.5 rounded-lg text-xs transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Artikel entfernen"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={addItem}
-            disabled={loading || !newItem.name.trim()}
-            className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Artikel hinzufügen
-          </button>
-        </form>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={loadDefaults}
-            disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <ShoppingCart size={20} />
-            Standard laden
-          </button>
-        </div>
-
-        {/* Shopping List */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Einkaufsliste</h2>
-          {loading && (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            </div>
-          )}
-          {!loading && items.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <ShoppingCart size={48} className="mx-auto mb-4 opacity-50" />
-              <p>Ihre Einkaufsliste ist leer. Fügen Sie einige Artikel hinzu, um zu beginnen!</p>
-            </div>
-          )}
-          {!loading && items.length > 0 && (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  id={`item-${item.id}`}
-                  className={`flex items-center justify-between p-4 border rounded-lg ${
-                    item.completed ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleItem(item.id)}
-                      className={`p-2 rounded-full ${
-                        item.completed
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-gray-100 text-gray-600'
-                      } hover:bg-opacity-80`}
-                    >
-                      <Check size={16} />
-                    </button>
-                    <span className="text-2xl">{item.emoji}</span>
-                    <div>
-                      <p className={`font-medium ${item.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-                        {item.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Menge: {item.quantity} • {item.category}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-full"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-gray-500 text-sm">
-          <p>DevOps Testaufgabe - Einkaufslisten-App</p>
-          <p>FastAPI Backend + Next.js Frontend</p>
+        <div className="text-center mt-8 sm:mt-12">
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6 sm:p-8">
+            <p className="text-slate-600 text-sm sm:text-base font-medium mb-1">DevOps Testaufgabe - Einkaufslisten-App</p>
+            <p className="text-slate-500 text-xs sm:text-sm">FastAPI Backend + Next.js Frontend</p>
+          </div>
         </div>
       </div>
     </div>
