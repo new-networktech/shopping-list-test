@@ -56,7 +56,7 @@ services:
     ports:
       - "3135:3135"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8185
+      - NEXT_PUBLIC_API_URL=http://85.214.6.159:8185
       - PORT=3135
     depends_on:
       backend:

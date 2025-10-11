@@ -34,6 +34,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5183",
+        "http://localhost:3135",
+        "http://85.214.6.159:3135",
         "*"  # For development - restrict in production
     ],
     allow_credentials=True,
