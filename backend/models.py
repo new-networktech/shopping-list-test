@@ -17,11 +17,12 @@ class UserUpdate(BaseModel):
     is_admin: Optional[bool] = None
 
 class User(UserBase):
-    id: str = Field(alias="_id")
+    id: str
     created_at: datetime
 
     class Config:
         populate_by_name = True
+        allow_population_by_field_name = True
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }

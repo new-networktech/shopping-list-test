@@ -154,6 +154,7 @@ async def list_users(current_user: User = Depends(get_current_admin)):
     users = []
     for user_data in db.users.find():
         user_data["_id"] = str(user_data["_id"])
+        user_data["id"] = str(user_data["_id"])  # Explicitly set id field
         users.append(User(**user_data))
     return users
 
@@ -182,6 +183,7 @@ async def create_user(
     
     result = db.users.insert_one(user_dict)
     user_dict["_id"] = str(result.inserted_id)
+    user_dict["id"] = str(result.inserted_id)  # Explicitly set id field
     
     return User(**user_dict)
 
