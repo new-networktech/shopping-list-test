@@ -54,7 +54,7 @@ async def startup_event():
         # Create default admin user if no users exist
         if db.users.count_documents({}) == 0:
             admin_username = os.getenv("ADMIN_USERNAME", "mjshp")
-            admin_password = os.getenv("ADMIN_PASSWORD", "125C4A$A978#D1D502041A551ED7FCA7BAEF")
+            admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
             
             admin_user = {
                 "username": admin_username,
