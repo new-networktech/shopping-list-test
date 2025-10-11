@@ -36,7 +36,7 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=1440
       - PORT=8185
       - ADMIN_USERNAME=${ADMIN_USERNAME:-mjshp}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-"125C4A$A978#D1D502041A551ED7FCA7BAEF"}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-"t934O!MzT8656#a9eZUo21uP"}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -57,7 +57,7 @@ services:
       - "3135:3135"
     environment:
       - NEXT_PUBLIC_API_URL=http://85.214.6.159:8185
-      - BACKEND_URL=http://85.214.6.159:8185
+      - BACKEND_URL=http://backend:8185
       - PORT=3135
     depends_on:
       backend:

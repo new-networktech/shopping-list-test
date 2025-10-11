@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { getAuthHeaders } from '../../lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8185';
+// Use internal API routes instead of direct backend calls
 
 interface User {
   id: string;
@@ -46,7 +46,7 @@ export default function AdminPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/admin/users`, {
+      const response = await axios.get('/api/admin/users', {
         headers: getAuthHeaders()
       });
       setUsers(response.data);
@@ -67,7 +67,7 @@ export default function AdminPage() {
 
     try {
       await axios.post(
-        `${API_URL}/admin/users`,
+        '/api/admin/users',
         {
           username: newUsername,
           password: newPassword,
@@ -97,7 +97,7 @@ export default function AdminPage() {
     }
 
     try {
-      await axios.delete(`${API_URL}/admin/users/${userId}`, {
+      await axios.delete(`/api/admin/users/${userId}`, {
         headers: getAuthHeaders()
       });
       await loadUsers();
@@ -112,7 +112,7 @@ export default function AdminPage() {
 
     try {
       await axios.put(
-        `${API_URL}/admin/users/${userId}`,
+        `/api/admin/users/${userId}`,
         { password: newPassword },
         {
           headers: getAuthHeaders()
@@ -127,7 +127,7 @@ export default function AdminPage() {
   const handleToggleAdmin = async (userId: string, currentIsAdmin: boolean) => {
     try {
       await axios.put(
-        `${API_URL}/admin/users/${userId}`,
+        `/api/admin/users/${userId}`,
         { is_admin: !currentIsAdmin },
         {
           headers: getAuthHeaders()

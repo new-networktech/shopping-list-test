@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserState(savedUser);
         // Verify token is still valid
         try {
-          const response = await axios.get(`${API_URL}/auth/me`, {
+          const response = await axios.get('/api/auth/me', {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (response.data.id !== savedUser.id) {
@@ -55,19 +55,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string) => {
     try {
       // Login request
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
-
-      const response = await axios.post(`${API_URL}/auth/login`, formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      const response = await axios.post('/api/auth/login', {
+        username,
+        password
       });
 
       const { access_token } = response.data;
       setToken(access_token);
 
       // Get user info
-      const userResponse = await axios.get(`${API_URL}/auth/me`, {
+      const userResponse = await axios.get('/api/auth/me', {
         headers: { Authorization: `Bearer ${access_token}` }
       });
 
@@ -97,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!token) return;
 
     try {
-      const response = await axios.get(`${API_URL}/auth/me`, {
+      const response = await axios.get('/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
       saveUser(response.data);
