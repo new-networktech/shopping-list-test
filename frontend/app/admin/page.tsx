@@ -49,6 +49,7 @@ export default function AdminPage() {
       const response = await axios.get('/api/admin/users', {
         headers: getAuthHeaders()
       });
+      console.log('Loaded users:', response.data); // Debug log
       setUsers(response.data);
       setError('');
     } catch (err: any) {
@@ -107,6 +108,12 @@ export default function AdminPage() {
   };
 
   const handleResetPassword = async (userId: string, username: string) => {
+    console.log('Reset password for user:', { userId, username }); // Debug log
+    if (!userId) {
+      alert('Error: User ID is missing');
+      return;
+    }
+    
     const newPassword = prompt(`Enter new password for user "${username}":`);
     if (!newPassword) return;
 
@@ -120,6 +127,7 @@ export default function AdminPage() {
       );
       alert('Password updated successfully');
     } catch (err: any) {
+      console.error('Password reset error:', err);
       alert(err.response?.data?.detail || 'Failed to update password');
     }
   };
@@ -151,24 +159,26 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">👑 Admin Dashboard</h1>
-            <span className="text-sm text-gray-600">Logged in as: {user.username}</span>
-          </div>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => router.push('/')}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-            >
-              📋 Shopping Lists
-            </button>
-            <button
-              onClick={logout}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">👑 Admin Dashboard</h1>
+              <span className="text-xs sm:text-sm text-gray-600">Logged in as: {user.username}</span>
+            </div>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={() => router.push('/')}
+                className="px-3 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+              >
+                📋 Shopping Lists
+              </button>
+              <button
+                onClick={logout}
+                className="px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -251,8 +261,8 @@ export default function AdminPage() {
 
         {/* Users Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600">
-            <h2 className="text-xl font-bold text-white">Users</h2>
+          <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600">
+            <h2 className="text-lg sm:text-xl font-bold text-white">Users</h2>
           </div>
           
           {loading ? (
@@ -265,19 +275,19 @@ export default function AdminPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[600px]">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Username
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Role
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                       Created
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -285,10 +295,10 @@ export default function AdminPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((u) => (
                     <tr key={u.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{u.username}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs font-semibold rounded-full ${
                             u.is_admin
@@ -299,22 +309,22 @@ export default function AdminPage() {
                           {u.is_admin ? '👑 Admin' : '👤 User'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
                         {new Date(u.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-1 sm:space-x-2">
                           <button
                             onClick={() => handleToggleAdmin(u.id, u.is_admin)}
                             disabled={u.id === user.id}
-                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Toggle admin status"
                           >
                             {u.is_admin ? '⬇️' : '⬆️'}
                           </button>
                           <button
                             onClick={() => handleResetPassword(u.id, u.username)}
-                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+                            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
                             title="Reset password"
                           >
                             🔑
@@ -322,7 +332,7 @@ export default function AdminPage() {
                           <button
                             onClick={() => handleDeleteUser(u.id, u.username)}
                             disabled={u.id === user.id}
-                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-red-500 text-white rounded hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Delete user"
                           >
                             🗑️
