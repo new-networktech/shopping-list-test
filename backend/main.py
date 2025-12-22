@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
 from bson import ObjectId
@@ -27,6 +29,23 @@ app = FastAPI(
     description="A shopping list API with MongoDB and JWT authentication",
     version="2.0.0"
 )
+
+# Add exception handler for validation errors to see what's being received
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    body = await request.body()
+    logger.error(f"Validation error on {request.url}")
+    logger.error(f"Validation errors: {exc.errors()}")
+    logger.error(f"Request body (raw): {body}")
+    logger.error(f"Request body (decoded): {body.decode('utf-8') if body else 'No body'}")
+    logger.error(f"Content-Type header: {request.headers.get('content-type', 'Not set')}")
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": exc.errors(),
+            "body_received": body.decode('utf-8', errors='ignore') if body else "No body"
+        }
+    )
 
 # CORS middleware
 app.add_middleware(
