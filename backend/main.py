@@ -434,8 +434,11 @@ async def update_list(
     
     # Return updated list
     updated_list = db.shopping_lists.find_one({"_id": object_id})
-    updated_list["id"] = str(updated_list["_id"])
     
+    if not updated_list:
+        raise HTTPException(status_code=404, detail="List not found after update")
+    
+    updated_list["id"] = str(updated_list["_id"])
     return ShoppingList(**updated_list)
 
 @app.get("/api/list", response_model=List[ShoppingItem])
