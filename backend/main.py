@@ -15,7 +15,7 @@ from models import (
     ShoppingList, CreateListRequest
 )
 from auth import (
-    get_password_hash, authenticate_user, 
+    get_password_hash, verify_password, authenticate_user, 
     create_access_token, get_current_user, 
     get_current_admin, ACCESS_TOKEN_EXPIRE_MINUTES
 )
@@ -74,25 +74,43 @@ async def startup_event():
         admin_username = os.getenv("ADMIN_USERNAME", "mjshp")
         admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
         
+        # Log password info for debugging (don't log actual password, just length and first char)
+        logger.info(f"Admin username: {admin_username}")
+        logger.info(f"Admin password length: {len(admin_password) if admin_password else 0}")
+        if admin_password:
+            logger.info(f"Admin password first char: {admin_password[0]}, last char: {admin_password[-1]}")
+        
         existing_admin = db.users.find_one({"username": admin_username})
         if not existing_admin:
             # Create admin user if it doesn't exist
+            new_hash = get_password_hash(admin_password)
             admin_user = {
                 "username": admin_username,
-                "hashed_password": get_password_hash(admin_password),
+                "hashed_password": new_hash,
                 "is_admin": True,
                 "created_at": datetime.utcnow()
             }
             db.users.insert_one(admin_user)
             logger.info(f"Created default admin user (username: {admin_username})")
+            # Test the hash immediately
+            test_verify = verify_password(admin_password, new_hash)
+            logger.info(f"Password hash verification test: {test_verify}")
         else:
             # Update admin password to match environment variable
             new_hash = get_password_hash(admin_password)
+            old_hash = existing_admin.get("hashed_password", "")
             db.users.update_one(
                 {"username": admin_username},
                 {"$set": {"hashed_password": new_hash, "is_admin": True}}
             )
             logger.info(f"Updated admin user password (username: {admin_username})")
+            # Test the hash immediately
+            test_verify = verify_password(admin_password, new_hash)
+            logger.info(f"Password hash verification test: {test_verify}")
+            # Also test with old hash to see if it was different
+            if old_hash:
+                old_verify = verify_password(admin_password, old_hash)
+                logger.info(f"Old password hash verification test: {old_verify}")
         
         logger.info("Application startup complete")
     except Exception as e:
