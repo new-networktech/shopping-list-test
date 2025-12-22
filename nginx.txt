@@ -1,0 +1,63 @@
+root@TEchN-Server:/home/moji/shopping-list# cat /etc/nginx/sites-available/shopping.botpast.com
+# HTTP -> HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name shopping.botpast.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name shopping.botpast.com;
+
+    # Cloudflare Origin cert
+    ssl_certificate     /etc/ssl/cloudflare_certs/botpast.com/certificate.pem;
+    ssl_certificate_key /etc/ssl/cloudflare_certs/botpast.com/private.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # (اختیاری) فقط برای سخت‌گیری امنیتی: فقط IPهای Cloudflare اجازه داشته باشند
+    # این بخش را اگر می‌خواهید، جداگانه می‌دهم چون باید لیست IPهای CF را وارد کنید.
+
+    # Frontend
+    location / {
+        proxy_pass http://127.0.0.1:3135;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Websocket support (اگر لازم شد)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # اگر SSR دارید بهتر است HTML را cache نکنید
+        add_header Cache-Control "no-store" always;
+    }
+
+    # اگر API شما روی همین دامنه باشد:
+    # مثلا /api -> بک‌اند
+    location /api/ {
+        proxy_pass http://127.0.0.1:8185/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        add_header Cache-Control "no-store" always;
+    }
+
+    # (اختیاری) health check
+    location = /health {
+        return 200 "OK\n";
+        add_header Content-Type text/plain;
+    }
+}
+root@TEchN-Server:/home/moji/shopping-list#

@@ -50,12 +50,9 @@ docker-compose up -d
 
 ### 🔐 Admin Login Credentials
 
-```
-Username: mjshp
-Password: 125C4A$A978#D1D502041A551ED7FCA7BAEF
-```
+Admin credentials are configured via environment variables (`ADMIN_USERNAME` and `ADMIN_PASSWORD`).
 
-**⚠️ Important**: These credentials are configured via environment variables for security!
+**⚠️ Security Note**: Never commit actual credentials to the repository. Use GitHub Secrets for production deployments.
 
 ## 📁 Project Structure
 
@@ -83,7 +80,7 @@ Password: 125C4A$A978#D1D502041A551ED7FCA7BAEF
 ## 🛠️ Technology Stack
 
 - **Backend**: FastAPI (Python) with JWT Authentication
-- **Frontend**: Next.js 14 (React)
+- **Frontend**: Next.js 16 (React 19)
 - **Database**: MongoDB 7
 - **Containerization**: Docker & Docker Compose
 - **CI/CD**: GitHub Actions
@@ -125,13 +122,19 @@ Configure these secrets in your GitHub repository (Settings → Secrets and vari
 - `SERVER_SSH_KEY` - Private SSH key for server access
 - `SERVER_PORT` - SSH port (default: 22)
 
-**Application Secrets:**
+**Application Secrets (REQUIRED):**
 
-- `MONGODB_ROOT_PASSWORD` - MongoDB admin password (45ABB#DBD9!C42A9C78286B25BCE8FBCAB)
-- `JWT_SECRET_KEY` - Secret key for JWT token generation
-- `ADMIN_USERNAME` - Admin username (mjshp)
-- `ADMIN_PASSWORD` - Admin password (125C4A$A978#D1D502041A551ED7FCA7BAEF)
-- `S3_BUCKET` - (Optional) S3 bucket name for backups
+- `MONGODB_ROOT_PASSWORD` - MongoDB admin password (generate a strong password)
+- `JWT_SECRET_KEY` - Secret key for JWT token generation (generate with: `openssl rand -hex 32`)
+- `ADMIN_USERNAME` - Admin username for initial setup
+- `ADMIN_PASSWORD` - Admin password (use a strong password)
+- `NEXT_PUBLIC_API_URL` - Frontend API URL (default: `https://shopping.botpast.com/api`)
+
+**Optional Configuration:**
+
+- `S3_BUCKET` - S3 bucket name for backups (default: `shopping-list-backup`)
+- `JWT_ALGORITHM` - JWT algorithm (default: `HS256`)
+- `ACCESS_TOKEN_EXPIRE_MINUTES` - Token expiration time (default: `1440`)
 
 #### CI/CD Pipeline Flow
 

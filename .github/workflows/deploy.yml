@@ -43,7 +43,7 @@ jobs:
           context: ./frontend
           push: true
           build-args: |
-            NEXT_PUBLIC_API_URL=http://85.214.6.159:8185
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://shopping.botpast.com/api' }}
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/shopping-list-frontend:${{ github.sha }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/shopping-list-frontend:latest
@@ -65,9 +65,12 @@ jobs:
           DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
           MONGODB_ROOT_PASSWORD=${{ secrets.MONGODB_ROOT_PASSWORD }}
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+          JWT_ALGORITHM=${{ secrets.JWT_ALGORITHM || 'HS256' }}
+          ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES || '1440' }}
           ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           S3_BUCKET=${{ secrets.S3_BUCKET || 'shopping-list-backup' }}
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL || 'https://shopping.botpast.com/api' }}
           IMAGE_TAG=${{ github.sha }}
           EOF
 
