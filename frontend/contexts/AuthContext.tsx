@@ -79,7 +79,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      throw new Error(error.response?.data?.detail || 'Login failed');
+      
+      // Extract error message properly
+      let errorMessage = 'Login failed'
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.detail) {
+        const detail = error.response.data.detail
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map((err: any) => err.msg || err.message || JSON.stringify(err)).join(', ')
+        } else {
+          errorMessage = detail
+        }
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      throw new Error(errorMessage);
     }
   };
 
