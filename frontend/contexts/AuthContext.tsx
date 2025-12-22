@@ -54,10 +54,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      // Login request
-      const response = await axios.post('/api/auth/login', {
-        username,
-        password
+      // Login request - send as form-urlencoded for FastAPI OAuth2PasswordRequestForm
+      // Note: Since nginx proxies /api/ directly to backend, we need to send form-urlencoded from client
+      const params = new URLSearchParams();
+      params.append('username', username);
+      params.append('password', password);
+      
+      const response = await axios.post('/api/auth/login', params.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
       const { access_token } = response.data;
