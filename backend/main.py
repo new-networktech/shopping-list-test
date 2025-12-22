@@ -70,11 +70,13 @@ async def startup_event():
         MongoDB.connect()
         db = MongoDB.get_database()
         
-        # Create default admin user if no users exist
-        if db.users.count_documents({}) == 0:
-            admin_username = os.getenv("ADMIN_USERNAME", "mjshp")
-            admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
-            
+        # Ensure admin user exists with correct password from environment
+        admin_username = os.getenv("ADMIN_USERNAME", "mjshp")
+        admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+        
+        existing_admin = db.users.find_one({"username": admin_username})
+        if not existing_admin:
+            # Create admin user if it doesn't exist
             admin_user = {
                 "username": admin_username,
                 "hashed_password": get_password_hash(admin_password),
@@ -83,6 +85,14 @@ async def startup_event():
             }
             db.users.insert_one(admin_user)
             logger.info(f"Created default admin user (username: {admin_username})")
+        else:
+            # Update admin password to match environment variable
+            new_hash = get_password_hash(admin_password)
+            db.users.update_one(
+                {"username": admin_username},
+                {"$set": {"hashed_password": new_hash, "is_admin": True}}
+            )
+            logger.info(f"Updated admin user password (username: {admin_username})")
         
         logger.info("Application startup complete")
     except Exception as e:
