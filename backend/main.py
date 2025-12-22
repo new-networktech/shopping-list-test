@@ -622,13 +622,12 @@ async def remove_item_no_prefix(
     """Remove an item from the shopping list (without /api prefix for nginx)"""
     return await _remove_item_impl(item_id, list_id, current_user)
 
-@app.put("/api/toggle/{item_id}")
-async def toggle_item(
+async def _toggle_item_impl(
     item_id: int,
     list_id: str = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Toggle completion status of an item"""
+    """Internal implementation for toggling items"""
     db = MongoDB.get_database()
     
     # Get list
@@ -674,6 +673,24 @@ async def toggle_item(
     for item in items:
         if item.get("id") == item_id:
             return {"message": f"Item {item_id} toggled", "completed": item["completed"]}
+
+@app.put("/api/toggle/{item_id}")
+async def toggle_item(
+    item_id: int,
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Toggle completion status of an item"""
+    return await _toggle_item_impl(item_id, list_id, current_user)
+
+@app.put("/toggle/{item_id}")
+async def toggle_item_no_prefix(
+    item_id: int,
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Toggle completion status of an item (without /api prefix for nginx)"""
+    return await _toggle_item_impl(item_id, list_id, current_user)
 
 @app.get("/api/defaults")
 async def get_default_items():
