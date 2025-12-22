@@ -441,12 +441,11 @@ async def update_list(
     updated_list["id"] = str(updated_list["_id"])
     return ShoppingList(**updated_list)
 
-@app.get("/api/list", response_model=List[ShoppingItem])
-async def get_shopping_list(
+async def _get_shopping_list_impl(
     list_id: str = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Get shopping list items"""
+    """Internal implementation for getting shopping list items"""
     db = MongoDB.get_database()
     
     # If no list_id provided, list_id is "default", or list_id is "undefined", get the first list for this user
@@ -482,13 +481,28 @@ async def get_shopping_list(
     
     return [ShoppingItem(**item) for item in list_data.get("items", [])]
 
-@app.post("/api/add", response_model=ShoppingItem)
-async def add_item(
+@app.get("/api/list", response_model=List[ShoppingItem])
+async def get_shopping_list(
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get shopping list items"""
+    return await _get_shopping_list_impl(list_id, current_user)
+
+@app.get("/list", response_model=List[ShoppingItem])
+async def get_shopping_list_no_prefix(
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get shopping list items (without /api prefix for nginx)"""
+    return await _get_shopping_list_impl(list_id, current_user)
+
+async def _add_item_impl(
     item: AddItemRequest,
     list_id: str = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Add a new item to the shopping list"""
+    """Internal implementation for adding items"""
     db = MongoDB.get_database()
     
     # Get or create list
@@ -541,13 +555,30 @@ async def add_item(
     
     return new_item
 
-@app.delete("/api/remove/{item_id}")
-async def remove_item(
+@app.post("/api/add", response_model=ShoppingItem)
+async def add_item(
+    item: AddItemRequest,
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Add a new item to the shopping list"""
+    return await _add_item_impl(item, list_id, current_user)
+
+@app.post("/add", response_model=ShoppingItem)
+async def add_item_no_prefix(
+    item: AddItemRequest,
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Add a new item to the shopping list (without /api prefix for nginx)"""
+    return await _add_item_impl(item, list_id, current_user)
+
+async def _remove_item_impl(
     item_id: int,
     list_id: str = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Remove an item from the shopping list"""
+    """Internal implementation for removing items"""
     db = MongoDB.get_database()
     
     # Get list
@@ -572,6 +603,24 @@ async def remove_item(
         raise HTTPException(status_code=404, detail="Item not found")
     
     return {"message": f"Item {item_id} removed successfully"}
+
+@app.delete("/api/remove/{item_id}")
+async def remove_item(
+    item_id: int,
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Remove an item from the shopping list"""
+    return await _remove_item_impl(item_id, list_id, current_user)
+
+@app.delete("/remove/{item_id}")
+async def remove_item_no_prefix(
+    item_id: int,
+    list_id: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Remove an item from the shopping list (without /api prefix for nginx)"""
+    return await _remove_item_impl(item_id, list_id, current_user)
 
 @app.put("/api/toggle/{item_id}")
 async def toggle_item(
