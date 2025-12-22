@@ -79,6 +79,7 @@ async def startup_event():
         logger.info(f"Admin password length: {len(admin_password) if admin_password else 0}")
         if admin_password:
             logger.info(f"Admin password first char: {admin_password[0]}, last char: {admin_password[-1]}")
+            logger.info(f"Admin password repr: {repr(admin_password)}")
         
         existing_admin = db.users.find_one({"username": admin_username})
         if not existing_admin:
