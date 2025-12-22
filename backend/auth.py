@@ -59,9 +59,12 @@ def authenticate_user(username: str, password: str) -> Optional[UserInDB]:
         logger.warning(f"User not found: {username}")
         return None
     logger.info(f"User found: {username}, checking password")
+    logger.info(f"Password being verified - length: {len(password)}, first char: {password[0] if password else 'N/A'}, last char: {password[-1] if password else 'N/A'}")
+    logger.info(f"Password being verified - repr: {repr(password)}")
     password_valid = verify_password(password, user.hashed_password)
     if not password_valid:
         logger.warning(f"Password verification failed for user: {username}")
+        logger.warning(f"Stored hash (first 20 chars): {user.hashed_password[:20]}...")
         return None
     logger.info(f"Authentication successful for user: {username}")
     return user

@@ -172,6 +172,13 @@ async def health_check():
 @app.post("/auth/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """User login endpoint"""
+    # Log received password details for debugging
+    logger.info(f"Login attempt - username: {form_data.username}")
+    logger.info(f"Login attempt - password length: {len(form_data.password)}")
+    logger.info(f"Login attempt - password first char: {form_data.password[0] if form_data.password else 'N/A'}")
+    logger.info(f"Login attempt - password last char: {form_data.password[-1] if form_data.password else 'N/A'}")
+    logger.info(f"Login attempt - password repr: {repr(form_data.password)}")
+    
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
