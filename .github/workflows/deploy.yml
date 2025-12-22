@@ -59,6 +59,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate required secrets
+        run: |
+          if [ -z "${{ secrets.SERVER_HOST }}" ]; then
+            echo "❌ Error: SERVER_HOST secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_USERNAME }}" ]; then
+            echo "❌ Error: SERVER_USERNAME secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SERVER_SSH_KEY }}" ]; then
+            echo "❌ Error: SERVER_SSH_KEY secret is not set"
+            echo "Please add your SSH private key to GitHub Secrets"
+            exit 1
+          fi
+          echo "✅ All required SSH secrets are configured"
+
       - name: Create .env file
         run: |
           cat > .env << EOF
