@@ -286,6 +286,7 @@ async def update_user(
         )
     
     result["_id"] = str(result["_id"])
+    result["id"] = str(result["_id"])  # Set id field for User model
     return User(**result)
 
 @app.delete("/admin/users/{user_id}")
@@ -457,8 +458,11 @@ async def get_shopping_list(
                 "items": []
             }
             result = db.shopping_lists.insert_one(default_list)
+            list_id = str(result.inserted_id)
+            # Return empty list since we just created it
             return []
-        list_id = str(first_list["_id"])
+        else:
+            list_id = str(first_list["_id"])
     
     try:
         object_id = ObjectId(list_id)
