@@ -50,11 +50,20 @@ def get_user(username: str) -> Optional[UserInDB]:
 
 def authenticate_user(username: str, password: str) -> Optional[UserInDB]:
     """Authenticate user with username and password"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Attempting to authenticate user: {username}")
     user = get_user(username)
     if not user:
+        logger.warning(f"User not found: {username}")
         return None
-    if not verify_password(password, user.hashed_password):
+    logger.info(f"User found: {username}, checking password")
+    password_valid = verify_password(password, user.hashed_password)
+    if not password_valid:
+        logger.warning(f"Password verification failed for user: {username}")
         return None
+    logger.info(f"Authentication successful for user: {username}")
     return user
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
