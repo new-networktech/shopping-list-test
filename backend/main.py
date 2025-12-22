@@ -492,7 +492,7 @@ async def add_item(
     db = MongoDB.get_database()
     
     # Get or create list
-    if not list_id or list_id == "undefined":
+    if not list_id or list_id == "undefined" or list_id == "default":
         first_list = db.shopping_lists.find_one({"user_id": current_user.id})
         if not first_list:
             default_list = {
@@ -551,7 +551,7 @@ async def remove_item(
     db = MongoDB.get_database()
     
     # Get list
-    if not list_id:
+    if not list_id or list_id == "undefined" or list_id == "default":
         first_list = db.shopping_lists.find_one({"user_id": current_user.id})
         if not first_list:
             raise HTTPException(status_code=404, detail="No lists found")
@@ -583,7 +583,7 @@ async def toggle_item(
     db = MongoDB.get_database()
     
     # Get list
-    if not list_id:
+    if not list_id or list_id == "undefined" or list_id == "default":
         first_list = db.shopping_lists.find_one({"user_id": current_user.id})
         if not first_list:
             raise HTTPException(status_code=404, detail="No lists found")
